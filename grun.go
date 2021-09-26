@@ -165,6 +165,10 @@
 //   func() string            // Or a returned string.
 //   func(*AppInfo) string    // ...
 //
+// Errors
+//   error                    // An error stops Run.
+//   Errors                   // Or multiple errors.
+//
 //
 // Callbacks
 //
@@ -479,8 +483,19 @@ func Exec(calls ...interface{}) func(*App) error {
 			case func(app *App) string:
 				app.Pack(func() gtk.Widgetter { return gtk.NewLabel(call(app)) })
 
+				//
+				// Errors
+
+			case error:
+				return call
+
+			case Errors:
+				if call.IsError() {
+					return call.ToError()
+				}
+
 			default:
-				e = fmt.Errorf(FmtErrTypeUnknown, call)
+				return fmt.Errorf(FmtErrTypeUnknown, call)
 			}
 
 			if e != nil {
